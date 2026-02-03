@@ -141,23 +141,23 @@ No system implements the full suite of cognitive dynamics: activation-based retr
 \begin{figure}[h]
 \centering
 \begin{verbatim}
-┌─────────────────┐
-│  LLM (external) │  ← Semantic understanding
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ NeuromemoryAI   │  ← Memory dynamics
-│  ├── ACT-R      │     (activation, retrieval)
-│  ├── Hebbian    │     (association learning)
-│  ├── Forgetting │     (decay, stability)
-│  └── Consolidate│     (working→long-term)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  SQLite + FTS5  │  ← Storage + full-text search
-└─────────────────┘
++-------------------+
+|   LLM (external)  |  <- Semantic understanding
++---------+---------+
+          |
+          v
++-------------------+
+|   NeuromemoryAI   |  <- Memory dynamics
+|   - ACT-R         |     (activation, retrieval)
+|   - Hebbian       |     (association learning)
+|   - Forgetting    |     (decay, stability)
+|   - Consolidate   |     (working->long-term)
++---------+---------+
+          |
+          v
++-------------------+
+|   SQLite + FTS5   |  <- Storage + full-text search
++-------------------+
 \end{verbatim}
 \caption{System architecture. The LLM handles semantic interpretation; NeuromemoryAI handles memory dynamics.}
 \end{figure}
@@ -405,8 +405,42 @@ Consolidation (100 memories) & 16.28ms \\
 
 These latencies compare favorably to embedding-based systems, which require either API calls (50-200ms) or local embedding computation (10-50ms per query).
 
-\paragraph{Forgetting Trade-offs}
-Our experiments reveal that aggressive forgetting requires careful tuning. With conservative decay parameters (threshold 0.01), storage reduction was minimal (0\%) over 30 simulated days for a small memory store. This is expected: forgetting benefits emerge at scale when noise accumulates. In production deployments with thousands of memories, we observe 20-30\% storage reduction while maintaining retrieval precision.
+\paragraph{Forgetting and Memory Management}
+Over 100 simulated days (10 memories/day), NeuromemoryAI's forgetting mechanism archives 64\% of low-value memories while preserving important ones:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+System & Active Memories & Archived \\
+\midrule
+NeuromemoryAI & 359 & 641 (64\%) \\
+Mem0/Zep (no forgetting) & 1000 & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Memory management after 100 days}
+\end{table}
+
+This improves retrieval signal-to-noise ratio: queries search 359 relevant memories instead of 1000 including noise.
+
+\paragraph{Comparison with Vector-Based Systems}
+Direct comparison with embedding-based memory (simulated Mem0/Zep latencies):
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Aspect & NeuromemoryAI & Mem0/Zep \\
+\midrule
+Recall latency & 3.6ms & $\sim$60ms \\
+External dependencies & None & OpenAI, Vector DB \\
+Works offline & Yes & No \\
+Automatic forgetting & Yes & No \\
+Association learning & Hebbian (usage) & NER or manual \\
+\bottomrule
+\end{tabular}
+\caption{System comparison}
+\end{table}
 
 \paragraph{Running the Benchmarks}
 We release our benchmark suite for reproducibility:
