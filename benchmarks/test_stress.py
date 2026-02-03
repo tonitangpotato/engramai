@@ -260,7 +260,7 @@ class TestBurstWrites:
             
             # Verify memories were actually stored
             stats = mem.stats()
-            assert stats["total"] >= burst_count, "Not all memories were stored"
+            assert stats["total_memories"] >= burst_count, "Not all memories were stored"
             
             print(f"\n✓ Burst write test passed")
         

@@ -109,26 +109,26 @@ class TestOneYearSimulation:
                 if day % 30 == 0:
                     stats = mem.stats()
                     metrics["days"].append(day)
-                    metrics["total_memories"].append(stats["total"])
-                    metrics["working_memories"].append(stats.get("working", 0))
-                    metrics["core_memories"].append(stats.get("core", 0))
-                    metrics["archive_memories"].append(stats.get("archive", 0))
+                    metrics["total_memories"].append(stats["total_memories"])
+                    metrics["working_memories"].append(stats["layers"]["working"]["count"])
+                    metrics["core_memories"].append(stats["layers"]["core"]["count"])
+                    metrics["archive_memories"].append(stats["layers"]["archive"]["count"])
                     
-                    print(f"  Day {day:3d}: total={stats['total']:4d}, "
-                          f"working={stats.get('working', 0):3d}, "
-                          f"core={stats.get('core', 0):3d}, "
-                          f"archive={stats.get('archive', 0):3d}")
+                    print(f"  Day {day:3d}: total={stats['total_memories']:4d}, "
+                          f"working={stats['layers']['working']['count']:3d}, "
+                          f"core={stats['layers']['core']['count']:3d}, "
+                          f"archive={stats['layers']['archive']['count']:3d}")
             
             # Final stats
             final_stats = mem.stats()
             print(f"\n  Final stats after 365 days:")
-            print(f"    Total memories: {final_stats['total']}")
-            print(f"    Working: {final_stats.get('working', 0)}")
-            print(f"    Core: {final_stats.get('core', 0)}")
-            print(f"    Archive: {final_stats.get('archive', 0)}")
+            print(f"    Total memories: {final_stats['total_memories']}")
+            print(f"    Working: {final_stats['layers']['working']['count']}")
+            print(f"    Core: {final_stats['layers']['core']['count']}")
+            print(f"    Archive: {final_stats['layers']['archive']['count']}")
             
             # Verify system didn't crash
-            assert final_stats["total"] > 0, "System should have memories"
+            assert final_stats["total_memories"] > 0, "System should have memories"
             
             print(f"\n✓ 365-day simulation completed successfully")
         
@@ -167,8 +167,8 @@ class TestOneYearSimulation:
                 # Track count every 10 days
                 if day % 10 == 0:
                     stats = mem.stats()
-                    memory_counts.append(stats["total"])
-                    print(f"  Day {day:3d}: {stats['total']:4d} memories")
+                    memory_counts.append(stats["total_memories"])
+                    print(f"  Day {day:3d}: {stats['total_memories']:4d} memories")
             
             # Check for plateau: growth should slow down in later period
             early_growth = memory_counts[5] - memory_counts[0] if len(memory_counts) > 5 else 0
@@ -306,7 +306,7 @@ class TestPerformanceStability:
                     latencies.append(latency_ms)
                     
                     stats = mem.stats()
-                    print(f"  Day {day:3d}: {stats['total']:4d} memories, "
+                    print(f"  Day {day:3d}: {stats['total_memories']:4d} memories, "
                           f"recall latency: {latency_ms:.2f}ms")
             
             # Check latency stays reasonable
