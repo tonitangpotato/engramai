@@ -111,6 +111,12 @@ nodes:
     status: active
     description: "Graph-based entity linking and retrieval. Entities stored in graph_links table, multi-hop traversal via shared memories. Entity extraction done by agent (LLM), library stores/queries."
 
+  feat-hebbian:
+    type: Component
+    layer: application
+    status: in_progress
+    description: "Hebbian learning: 'neurons that fire together wire together'. Memories co-activated during recall automatically form links after threshold. Emergent structure without manual entity tagging."
+
   feat-api:
     type: Component
     layer: application
@@ -271,6 +277,18 @@ nodes:
     status: active
     description: "Entity extraction is done by the agent (LLM), not the library. Library provides graph storage + query APIs. No LLM dependency in engram-core."
 
+  decision-no-ner:
+    type: Decision
+    layer: domain
+    status: active
+    description: "No bundled NER (unlike shodh-memory). Reasons: (1) LLM already understands semantics better than TinyBERT, (2) Hebbian learning provides emergent structure without NER, (3) preserves zero-dependency philosophy."
+
+  decision-llm-native:
+    type: Decision
+    layer: domain
+    status: active
+    description: "engram is designed for LLM agents, not standalone. Philosophy: 'LLM is the semantic layer, engram is the dynamics layer'. Don't duplicate what LLM already does well."
+
 edges:
   # Phase 0 tasks
   - from: task-package-structure
@@ -389,6 +407,20 @@ edges:
     relation: decided_by
   - from: decision-no-embedding-v1
     to: decision-positioning
+    relation: decided_by
+
+  # Hebbian learning
+  - from: feat-hebbian
+    to: phase-1
+    relation: implements
+  - from: feat-hebbian
+    to: feat-search
+    relation: enables
+  - from: feat-hebbian
+    to: decision-no-ner
+    relation: decided_by
+  - from: decision-no-ner
+    to: decision-llm-native
     relation: decided_by
 
   # Phase 2 depends on Phase 1
