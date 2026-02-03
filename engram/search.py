@@ -49,10 +49,12 @@ class SearchEngine:
     ) -> list[SearchResult]:
         """Main search method."""
         candidates = self._get_candidates(query, types, layers, time_range)
+        hebbian_boosts: dict[str, float] = {}
 
         # Graph expansion: find entities in candidates, pull in related memories
+        # Also computes Hebbian spreading activation boosts
         if graph_expand and candidates:
-            candidates = self._expand_via_graph(candidates)
+            candidates, hebbian_boosts = self._expand_via_graph(candidates)
 
             # Re-apply filters on expanded set
             if types:
@@ -65,7 +67,7 @@ class SearchEngine:
                 t_min, t_max = time_range
                 candidates = [c for c in candidates if t_min <= c.created_at <= t_max]
 
-        scored = self._score_candidates(candidates, context_keywords, has_query=bool(query.strip()))
+        scored = self._score_candidates(candidates, context_keywords, has_query=bool(query.strip()), hebbian_boosts=hebbian_boosts)
         return self._rank_and_filter(scored, limit, min_confidence)
 
     def _get_candidates(
@@ -101,11 +103,17 @@ class SearchEngine:
 
         return candidates
 
-    def _expand_via_graph(self, candidates: list[MemoryEntry]) -> list[MemoryEntry]:
+    def _expand_via_graph(self, candidates: list[MemoryEntry]) -> tuple[list[MemoryEntry], dict[str, float]]:
         """Expand candidate set by finding memories that share entities with current candidates,
-        and also include Hebbian-linked memories (co-activation associations)."""
+        and also include Hebbian-linked memories (co-activation associations).
+        
+        Returns:
+            Tuple of (expanded_candidates, hebbian_boosts)
+            hebbian_boosts maps memory_id -> activation boost from Hebbian spreading
+        """
         seen_ids = {c.id for c in candidates}
         new_candidates = []
+        hebbian_boosts: dict[str, float] = {}
 
         # 1. Entity-based expansion
         all_entities = set()
@@ -127,26 +135,48 @@ class SearchEngine:
                     new_candidates.append(entry)
 
         # 2. Hebbian expansion: include memories linked via co-activation
+        # AND compute spreading activation boosts
         for c in candidates:
             hebbian_neighbors = get_hebbian_neighbors(self.store, c.id)
             for neighbor_id in hebbian_neighbors:
+                # Get link strength for weighted boost
+                strength = self._get_hebbian_strength(c.id, neighbor_id)
+                boost = 0.5 * strength  # Scale boost by link strength
+                
+                # Accumulate boosts (memory can be neighbor of multiple candidates)
+                hebbian_boosts[neighbor_id] = hebbian_boosts.get(neighbor_id, 0) + boost
+                
                 if neighbor_id not in seen_ids:
                     entry = self.store.get(neighbor_id)
                     if entry:
                         seen_ids.add(neighbor_id)
                         new_candidates.append(entry)
 
-        return candidates + new_candidates
+        return candidates + new_candidates, hebbian_boosts
+    
+    def _get_hebbian_strength(self, source_id: str, target_id: str) -> float:
+        """Get the Hebbian link strength between two memories."""
+        try:
+            row = self.store._conn.execute(
+                """SELECT strength FROM hebbian_links 
+                   WHERE (source_id=? AND target_id=?) OR (source_id=? AND target_id=?)""",
+                (source_id, target_id, target_id, source_id)
+            ).fetchone()
+            return row[0] if row else 0.0
+        except Exception:
+            return 0.0
 
     def _score_candidates(
         self,
         candidates: list[MemoryEntry],
         context_keywords: Optional[list[str]],
         has_query: bool = False,
+        hebbian_boosts: Optional[dict[str, float]] = None,
     ) -> list[SearchResult]:
-        """Score each candidate using ACT-R activation + confidence."""
+        """Score each candidate using ACT-R activation + confidence + Hebbian spreading."""
         now = time.time()
         results = []
+        hebbian_boosts = hebbian_boosts or {}
 
         for entry in candidates:
             # Ensure access_times are populated
@@ -173,8 +203,13 @@ class SearchEngine:
             # (SQLite FTS5 rank is internal; we approximate with order.)
             relevance = 1.0 if has_query else 0.0
 
-            # Final combined score: ACT-R activation is the primary signal
-            score = act_score + (0.5 * relevance)
+            # Hebbian spreading activation boost
+            # Memories linked to directly-matched candidates get a boost
+            # This implements "neurons that fire together, wire together" for retrieval
+            hebbian_boost = hebbian_boosts.get(entry.id, 0.0)
+
+            # Final combined score: ACT-R activation + relevance + Hebbian spreading
+            score = act_score + (0.5 * relevance) + hebbian_boost
 
             results.append(SearchResult(
                 entry=entry,

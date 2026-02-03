@@ -523,6 +523,21 @@ Engram is grounded in peer-reviewed cognitive science:
 - **Dopaminergic Memory Modulation** — Lisman, J.E. & Grace, A.A. (2005). The hippocampal-VTA loop: controlling the entry of information into long-term memory. *Neuron*, 46(5), 703-713.
 - **HippoRAG** — Yu, B. et al. (2024). HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models. *NeurIPS 2024*.
 
+## Storage
+
+NeuromemoryAI uses a **pluggable storage architecture**. The core philosophy is zero external dependencies for the default case:
+
+| Backend | Status | Dependencies | Use Case |
+|---------|--------|--------------|----------|
+| **SQLite + FTS5** | ✅ Default | None (Python stdlib) | Local agents, offline use, privacy-first |
+| Supabase | 🔜 Planned | `supabase-py` | Multi-device sync, cloud backup |
+| Turso/libSQL | 🔜 Planned | `libsql` | Edge deployment, global replication |
+| Postgres | 🔜 Planned | `psycopg2` | Enterprise, existing infrastructure |
+
+**Default (SQLite)** — Works out of the box with zero config. Data stored in a local `.db` file. Perfect for single-agent deployments or privacy-sensitive applications.
+
+**Cloud backends** — Optional for users who need multi-device sync or cloud backup. Requires additional dependencies and account setup. The same Memory API works across all backends.
+
 ## Roadmap
 
 - [x] Core memory models (ACT-R, Memory Chain, Ebbinghaus)
