@@ -15,4 +15,4 @@ from engram.config import MemoryConfig
 from engram.core import MemoryType, MemoryLayer, MemoryEntry, MemoryStore
 
 __all__ = ["Memory", "MemoryConfig", "MemoryType", "MemoryLayer", "MemoryEntry", "MemoryStore"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"

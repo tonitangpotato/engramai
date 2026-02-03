@@ -48,6 +48,11 @@ export interface MemoryConfigOptions {
   anomalyWindowSize?: number;
   anomalySigmaThreshold?: number;
   anomalyMinSamples?: number;
+
+  // Hebbian Learning
+  hebbianEnabled?: boolean;
+  hebbianThreshold?: number;
+  hebbianDecay?: number;
 }
 
 export class MemoryConfig {
@@ -89,6 +94,10 @@ export class MemoryConfig {
   anomalyWindowSize: number;
   anomalySigmaThreshold: number;
   anomalyMinSamples: number;
+
+  hebbianEnabled: boolean;
+  hebbianThreshold: number;
+  hebbianDecay: number;
 
   constructor(opts: MemoryConfigOptions = {}) {
     this.spacingFactor = opts.spacingFactor ?? 0.5;
@@ -136,6 +145,10 @@ export class MemoryConfig {
     this.anomalyWindowSize = opts.anomalyWindowSize ?? 100;
     this.anomalySigmaThreshold = opts.anomalySigmaThreshold ?? 2.0;
     this.anomalyMinSamples = opts.anomalyMinSamples ?? 5;
+
+    this.hebbianEnabled = opts.hebbianEnabled ?? true;
+    this.hebbianThreshold = opts.hebbianThreshold ?? 3;
+    this.hebbianDecay = opts.hebbianDecay ?? 0.95;
   }
 
   static default(): MemoryConfig {

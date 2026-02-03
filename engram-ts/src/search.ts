@@ -7,6 +7,7 @@ import { SQLiteStore } from './store';
 import { retrievalActivation } from './activation';
 import { effectiveStrength } from './forgetting';
 import { confidenceScore, confidenceLabel } from './confidence';
+import { getHebbianNeighbors } from './hebbian';
 
 export interface SearchResult {
   entry: MemoryEntry;
@@ -124,6 +125,20 @@ export class SearchEngine {
         if (!seenIds.has(entry.id)) {
           seenIds.add(entry.id);
           newCandidates.push(entry);
+        }
+      }
+    }
+
+    // Expand via Hebbian links
+    for (const c of candidates) {
+      const hebbianNeighbors = getHebbianNeighbors(this.store, c.id);
+      for (const neighborId of hebbianNeighbors) {
+        if (!seenIds.has(neighborId)) {
+          const entry = this.store.get(neighborId);
+          if (entry) {
+            seenIds.add(neighborId);
+            newCandidates.push(entry);
+          }
         }
       }
     }

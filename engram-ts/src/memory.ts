@@ -13,6 +13,7 @@ import { confidenceScore, confidenceLabel } from './confidence';
 import { detectFeedback, applyReward } from './reward';
 import { synapticDownscale } from './downscaling';
 import { BaselineTracker } from './anomaly';
+import { recordCoactivation, decayHebbianLinks, getHebbianNeighbors } from './hebbian';
 
 const TYPE_MAP: Record<string, MemoryType> = {};
 for (const t of Object.values(MemoryType)) {
@@ -143,6 +144,12 @@ export class Memory {
       contradicted: Boolean(r.entry.contradictedBy),
     }));
 
+    // Record Hebbian co-activation
+    if (this.config.hebbianEnabled && searchResults.length >= 2) {
+      const resultIds = searchResults.map(r => r.entry.id);
+      recordCoactivation(this._store, resultIds, this.config);
+    }
+
     this._tracker.update('retrieval_count', output.length);
     return output;
   }
@@ -161,6 +168,11 @@ export class Memory {
       this.config.archiveThreshold,
     );
     synapticDownscale(this._store, this.config.downscaleFactor);
+    
+    // Decay Hebbian links
+    if (this.config.hebbianEnabled) {
+      decayHebbianLinks(this._store, this.config.hebbianDecay);
+    }
   }
 
   forget(opts: { memoryId?: string; threshold?: number } = {}): void {
@@ -243,6 +255,10 @@ export class Memory {
       entry.pinned = false;
       this._store.update(entry);
     }
+  }
+
+  hebbianLinks(memoryId: string): string[] {
+    return getHebbianNeighbors(this._store, memoryId);
   }
 
   close(): void {

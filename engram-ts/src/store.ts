@@ -35,9 +35,20 @@ CREATE TABLE IF NOT EXISTS graph_links (
     relation TEXT DEFAULT ''
 );
 
+CREATE TABLE IF NOT EXISTS hebbian_links (
+    source_id TEXT REFERENCES memories(id) ON DELETE CASCADE,
+    target_id TEXT REFERENCES memories(id) ON DELETE CASCADE,
+    strength REAL DEFAULT 1.0,
+    coactivation_count INTEGER DEFAULT 0,
+    created_at REAL DEFAULT (julianday('now')),
+    PRIMARY KEY (source_id, target_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_access_log_mid ON access_log(memory_id);
 CREATE INDEX IF NOT EXISTS idx_graph_links_mid ON graph_links(memory_id);
 CREATE INDEX IF NOT EXISTS idx_graph_links_nid ON graph_links(node_id);
+CREATE INDEX IF NOT EXISTS idx_hebbian_source ON hebbian_links(source_id);
+CREATE INDEX IF NOT EXISTS idx_hebbian_target ON hebbian_links(target_id);
 `;
 
 const _FTS_SCHEMA = `
@@ -312,6 +323,57 @@ export class SQLiteStore {
 
     visited.delete(entity);
     return Array.from(visited);
+  }
+
+  // Hebbian link methods
+
+  getHebbianLink(sourceId: string, targetId: string): { strength: number; coactivationCount: number; createdAt: number } | null {
+    const row = this.db.prepare(
+      'SELECT strength, coactivation_count, created_at FROM hebbian_links WHERE source_id=? AND target_id=?'
+    ).get(sourceId, targetId) as { strength: number; coactivation_count: number; created_at: number } | undefined;
+    if (!row) return null;
+    return {
+      strength: row.strength,
+      coactivationCount: row.coactivation_count,
+      createdAt: row.created_at
+    };
+  }
+
+  upsertHebbianLink(sourceId: string, targetId: string, strength: number, coactivationCount: number): void {
+    const now = Date.now() / 1000;
+    this.db.prepare(`
+      INSERT INTO hebbian_links (source_id, target_id, strength, coactivation_count, created_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(source_id, target_id) DO UPDATE SET
+        strength = excluded.strength,
+        coactivation_count = excluded.coactivation_count
+    `).run(sourceId, targetId, strength, coactivationCount, now);
+  }
+
+  getHebbianNeighbors(memoryId: string): string[] {
+    const rows = this.db.prepare(
+      'SELECT target_id FROM hebbian_links WHERE source_id = ? AND strength > 0'
+    ).all(memoryId) as Array<{ target_id: string }>;
+    return rows.map(r => r.target_id);
+  }
+
+  getAllHebbianLinks(): Array<{ sourceId: string; targetId: string; strength: number }> {
+    const rows = this.db.prepare(
+      'SELECT source_id, target_id, strength FROM hebbian_links WHERE strength > 0'
+    ).all() as Array<{ source_id: string; target_id: string; strength: number }>;
+    return rows.map(r => ({ sourceId: r.source_id, targetId: r.target_id, strength: r.strength }));
+  }
+
+  decayHebbianLinks(factor: number): number {
+    this.db.prepare(
+      'UPDATE hebbian_links SET strength = strength * ? WHERE strength > 0'
+    ).run(factor);
+
+    const result = this.db.prepare(
+      'DELETE FROM hebbian_links WHERE strength > 0 AND strength < 0.1'
+    ).run();
+
+    return result.changes;
   }
 
   close(): void {
