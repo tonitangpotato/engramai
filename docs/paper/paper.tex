@@ -360,22 +360,30 @@ We evaluate \textsc{NeuromemoryAI} on our benchmark suite, focusing on the uniqu
 \paragraph{Multi-Session Continuity}
 In a simulation of 10 sessions over 7 days, user preferences stated in session 1 were retrieved with Recall@3 of 40\% using pure FTS5 keyword matching. When augmented with an LLM for query expansion (converting ``user name'' to ``user name Alice Chen''), Recall@3 improved to 80\%. This highlights the system's design: \emph{memory dynamics} handle activation and retrieval ordering, while \emph{LLMs} handle semantic interpretation.
 
-\paragraph{Hebbian Emergence}
-The most compelling result: Hebbian links form with 100\% within-topic precision. Across 5 co-retrieval sessions for each of 3 topics (ML, cooking, travel), all 6 formed links connected semantically related memories. No cross-topic noise links emerged. This validates that co-activation captures meaningful relationships without NER:
+\paragraph{Hebbian Emergence and Spreading Activation}
+The most compelling result: Hebbian links form automatically and \emph{improve retrieval} through spreading activation. We demonstrate this with a simple experiment:
+
+\begin{enumerate}
+    \item Add 3 ML-related memories (neural networks, gradient descent, PyTorch)
+    \item Query ``Neural networks'' → returns 1 result (direct match only)
+    \item Simulate usage: 5 queries that co-activate all 3 memories together
+    \item Query ``Neural networks'' again → returns \textbf{3 results}
+\end{enumerate}
+
+The additional 2 memories were retrieved via Hebbian spreading activation, even though they don't contain ``Neural networks.'' This demonstrates emergent associative retrieval without NER or manual linking.
 
 \begin{table}[h]
 \centering
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-Metric & Value \\
+Condition & Results for ``Neural networks'' \\
 \midrule
-Total links formed & 6 \\
-Within-topic links & 6 \\
-Cross-topic (noise) & 0 \\
-Precision & 100\% \\
+Before co-activation & 1 \\
+After co-activation (no expansion) & 1 \\
+After co-activation (with Hebbian expansion) & \textbf{3} \\
 \bottomrule
 \end{tabular}
-\caption{Hebbian link formation after 5 sessions per topic}
+\caption{Hebbian spreading activation improves recall}
 \end{table}
 
 \paragraph{Performance}

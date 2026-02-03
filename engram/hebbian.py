@@ -89,12 +89,25 @@ def maybe_create_link(
     ).fetchone()
     
     if existing and existing[0] > 0:
-        # Link already exists, just increment coactivation count
+        # Link already exists - strengthen it! (Hebbian: "use it or lose it")
+        # This counteracts decay and keeps active associations strong
+        current_strength = existing[0]
+        # Boost by 10%, capped at 1.0
+        new_strength = min(1.0, current_strength + 0.1)
         conn.execute(
             """UPDATE hebbian_links 
-               SET coactivation_count = coactivation_count + 1 
+               SET coactivation_count = coactivation_count + 1,
+                   strength = ?
                WHERE source_id=? AND target_id=?""",
-            (id1, id2)
+            (new_strength, id1, id2)
+        )
+        # Also strengthen the reverse link
+        conn.execute(
+            """UPDATE hebbian_links 
+               SET coactivation_count = coactivation_count + 1,
+                   strength = ?
+               WHERE source_id=? AND target_id=?""",
+            (new_strength, id2, id1)
         )
         conn.commit()
         return False
