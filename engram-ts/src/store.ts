@@ -228,7 +228,10 @@ export class SQLiteStore {
   }
 
   export(path: string): void {
-    this.db.backup(path);
+    // better-sqlite3 serialize() returns a Buffer copy of the entire DB
+    const fs = require('fs');
+    const buf = this.db.serialize();
+    fs.writeFileSync(path, buf);
   }
 
   stats(): { total_memories: number; by_type: Record<string, number>; by_layer: Record<string, number>; total_accesses: number } {
