@@ -1,16 +1,19 @@
-# Engram 🧠
+# neuromemory-ai 🧠
 
 *Neuroscience-grounded memory for AI agents*
 
 > **engram** /ˈɛnɡræm/ — a hypothesized physical trace in the brain that stores a memory. First proposed by Richard Semon (1904), the engram represents the idea that experiences leave lasting biological changes in neural tissue. We chose this name because, like its neuroscience namesake, this library treats memories not as static records but as living traces that strengthen, fade, and interact over time.
 
+[![PyPI](https://img.shields.io/pypi/v/neuromemory-ai.svg)](https://pypi.org/project/neuromemory-ai/)
+[![npm](https://img.shields.io/npm/v/neuromemory-ai.svg)](https://www.npmjs.com/package/neuromemory-ai)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
+[![TypeScript](https://img.shields.io/badge/typescript-5.0%2B-blue.svg)](https://typescriptlang.org)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 
 ---
 
-**Engram** gives AI agents memory that actually works — using real mathematical models from cognitive science instead of naive embeddings and cosine similarity.
+**neuromemory-ai** gives AI agents memory that actually works — using real mathematical models from cognitive science instead of naive embeddings and cosine similarity.
 
 ```python
 from engram import Memory
