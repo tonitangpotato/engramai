@@ -550,9 +550,9 @@ NeuromemoryAI uses a **pluggable storage architecture**. The core philosophy is 
 - [x] Configurable parameters with agent-type presets
 - [x] 89 tests (unit + e2e lifecycle)
 - [x] TypeScript port (`npm install neuromemory-ai`)
-- [ ] PyPI publish (`pip install neuromemory-ai`)
+- [x] PyPI publish (v0.1.1) (`pip install neuromemory-ai`)
 - [ ] Pluggable store backends (Supabase, Turso, Postgres)
-- [ ] Benchmarks vs Mem0 / Zep on real agent workloads
+- [x] Benchmarks vs Mem0 / Zep on real agent workloads
 - [ ] Consolidation summaries via LLM (compress episodic → factual)
 - [ ] Research paper: *"Neuroscience-Grounded Memory for AI Agents"*
 
@@ -565,6 +565,28 @@ npm install neuromemory-ai
 ```
 
 For TypeScript-specific documentation, see [engram-ts/README.md](./engram-ts/README.md).
+
+## Testing & Edge Cases
+
+**152 tests** cover unit, integration, and edge case scenarios.
+
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run benchmarks
+python benchmarks/run_benchmark.py --all
+python benchmarks/simulate_emergence.py --days 100
+python benchmarks/compare_approaches.py
+```
+
+For detailed edge cases, known limitations, and production recommendations, see [docs/EDGE_CASES.md](./docs/EDGE_CASES.md).
+
+Key findings:
+- ✅ Handles Unicode, long content, SQL injection attempts
+- ✅ Scales to 10k+ memories with <500ms recall
+- ⚠️ SQLite concurrent writes can lock (use single instance per process)
+- ✅ Hebbian links persist with periodic co-activation
 
 ## Contributing
 
