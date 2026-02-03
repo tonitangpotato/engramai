@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
-name = "engram"
+name = "engramai"
 version = "0.1.0"
 description = "Neuroscience-grounded memory for AI agents"
 readme = "README.md"
@@ -24,9 +24,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/tonitangpotato/engram"
-Repository = "https://github.com/tonitangpotato/engram"
-Issues = "https://github.com/tonitangpotato/engram/issues"
+Homepage = "https://github.com/tonitangpotato/engramai"
+Repository = "https://github.com/tonitangpotato/engramai"
+Issues = "https://github.com/tonitangpotato/engramai/issues"
 
 [project.optional-dependencies]
 mcp = ["fastmcp"]

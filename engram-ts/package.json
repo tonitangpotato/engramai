@@ -1,5 +1,5 @@
 {
-  "name": "engram",
+  "name": "engramai",
   "version": "0.1.0",
   "description": "Neuroscience-grounded memory system for AI agents",
   "main": "dist/index.js",
@@ -7,7 +7,7 @@
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tonitangpotato/engram"
+    "url": "https://github.com/tonitangpotato/engramai"
   },
   "keywords": [
     "memory",
