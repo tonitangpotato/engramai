@@ -4,7 +4,7 @@
 
 > **engram** /ˈɛnɡræm/ — a hypothesized physical trace in the brain that stores a memory. First proposed by Richard Semon (1904), the engram represents the idea that experiences leave lasting biological changes in neural tissue. We chose this name because, like its neuroscience namesake, this library treats memories not as static records but as living traces that strengthen, fade, and interact over time.
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 
@@ -332,7 +332,7 @@ python -m pytest tests/
 
 ## License
 
-[Apache 2.0](LICENSE)
+**AGPL-3.0** — open source with copyleft. Commercial license available for proprietary/SaaS use. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
 
 ---
 

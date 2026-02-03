@@ -7,14 +7,14 @@ name = "engram"
 version = "0.1.0"
 description = "Neuroscience-grounded memory for AI agents"
 readme = "README.md"
-license = "Apache-2.0"
+license = "AGPL-3.0-only"
 requires-python = ">=3.10"
 dependencies = []
 keywords = ["memory", "agents", "ai", "neuroscience", "act-r", "cognitive-science"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
