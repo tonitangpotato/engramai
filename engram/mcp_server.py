@@ -151,5 +151,97 @@ def export_memories(path: str) -> dict:
     }
 
 
+@mcp.tool(name="engram.hebbian_links", description="Get Hebbian associations for a memory")
+def hebbian_links(memory_id: str) -> dict:
+    """Get memories linked via Hebbian learning (co-activation patterns)."""
+    mem = _get_mem()
+    from engram.hebbian import get_hebbian_neighbors
+    links = get_hebbian_neighbors(mem._store, memory_id)
+    # Get content for linked memories
+    linked_memories = []
+    for link in links:
+        entry = mem._store.get(link["target_id"])
+        if entry:
+            linked_memories.append({
+                "id": link["target_id"],
+                "content": entry.content[:100] + "..." if len(entry.content) > 100 else entry.content,
+                "strength": link["strength"],
+                "coactivation_count": link["coactivation_count"],
+            })
+    return {
+        "source_id": memory_id,
+        "links": linked_memories,
+        "total_links": len(linked_memories),
+    }
+
+
+@mcp.tool(name="engram.all_hebbian", description="Get all Hebbian links in the memory system")
+def all_hebbian_links() -> dict:
+    """Get all Hebbian associations formed through co-activation."""
+    mem = _get_mem()
+    from engram.hebbian import get_all_links
+    links = get_all_links(mem._store)
+    return {
+        "total_links": len(links),
+        "links": [
+            {
+                "source": l["source_id"],
+                "target": l["target_id"],
+                "strength": l["strength"],
+                "coactivations": l["coactivation_count"],
+            }
+            for l in links[:50]  # Limit to 50 for response size
+        ],
+    }
+
+
+@mcp.tool(name="engram.pin", description="Pin a memory to prevent forgetting")
+def pin_memory(memory_id: str) -> dict:
+    """Pin a memory so it won't be forgotten during pruning."""
+    mem = _get_mem()
+    entry = mem._store.get(memory_id)
+    if not entry:
+        return {"error": f"Memory {memory_id} not found"}
+    entry.pinned = True
+    mem._store.update(entry)
+    return {"pinned": True, "memory_id": memory_id}
+
+
+@mcp.tool(name="engram.unpin", description="Unpin a memory to allow normal forgetting")
+def unpin_memory(memory_id: str) -> dict:
+    """Unpin a memory to allow normal decay and forgetting."""
+    mem = _get_mem()
+    entry = mem._store.get(memory_id)
+    if not entry:
+        return {"error": f"Memory {memory_id} not found"}
+    entry.pinned = False
+    mem._store.update(entry)
+    return {"pinned": False, "memory_id": memory_id}
+
+
+@mcp.tool(name="engram.get", description="Get a specific memory by ID")
+def get_memory(memory_id: str) -> dict:
+    """Get full details of a specific memory."""
+    mem = _get_mem()
+    entry = mem._store.get(memory_id)
+    if not entry:
+        return {"error": f"Memory {memory_id} not found"}
+    return {
+        "id": entry.id,
+        "content": entry.content,
+        "type": entry.memory_type.value,
+        "layer": entry.layer.value,
+        "importance": entry.importance,
+        "strength": entry.strength,
+        "stability": entry.stability,
+        "access_count": entry.access_count,
+        "created_at": entry.created_at.isoformat() if entry.created_at else None,
+        "last_accessed": entry.last_accessed.isoformat() if entry.last_accessed else None,
+        "pinned": entry.pinned,
+        "source": entry.source,
+        "tags": entry.tags,
+    }
+
+
 if __name__ == "__main__":
     mcp.run()
