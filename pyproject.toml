@@ -27,6 +27,9 @@ Homepage = "https://github.com/tonitangpotato/neuromemory-ai"
 Repository = "https://github.com/tonitangpotato/neuromemory-ai"
 Issues = "https://github.com/tonitangpotato/neuromemory-ai/issues"
 
+[project.scripts]
+neuromem = "engram.cli:main"
+
 [project.optional-dependencies]
 mcp = ["fastmcp"]
 dev = ["pytest"]
