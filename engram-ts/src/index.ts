@@ -10,3 +10,4 @@ export { detectFeedback, applyReward } from './reward';
 export { synapticDownscale } from './downscaling';
 export { BaselineTracker } from './anomaly';
 export { SearchEngine, SearchResult } from './search';
+export { recordCoactivation, maybeCreateLink, getHebbianNeighbors, decayHebbianLinks, strengthenLink, getAllHebbianLinks } from './hebbian';

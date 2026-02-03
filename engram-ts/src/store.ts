@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS hebbian_links (
     target_id TEXT REFERENCES memories(id) ON DELETE CASCADE,
     strength REAL DEFAULT 1.0,
     coactivation_count INTEGER DEFAULT 0,
-    created_at REAL DEFAULT (julianday('now')),
+    created_at REAL,
     PRIMARY KEY (source_id, target_id)
 );
 
@@ -328,9 +328,18 @@ export class SQLiteStore {
   // Hebbian link methods
 
   getHebbianLink(sourceId: string, targetId: string): { strength: number; coactivationCount: number; createdAt: number } | null {
-    const row = this.db.prepare(
+    // Try the provided order first
+    let row = this.db.prepare(
       'SELECT strength, coactivation_count, created_at FROM hebbian_links WHERE source_id=? AND target_id=?'
     ).get(sourceId, targetId) as { strength: number; coactivation_count: number; created_at: number } | undefined;
+    
+    // If not found, try the reverse order (links are stored with consistent ordering)
+    if (!row) {
+      row = this.db.prepare(
+        'SELECT strength, coactivation_count, created_at FROM hebbian_links WHERE source_id=? AND target_id=?'
+      ).get(targetId, sourceId) as { strength: number; coactivation_count: number; created_at: number } | undefined;
+    }
+    
     if (!row) return null;
     return {
       strength: row.strength,
@@ -341,13 +350,20 @@ export class SQLiteStore {
 
   upsertHebbianLink(sourceId: string, targetId: string, strength: number, coactivationCount: number): void {
     const now = Date.now() / 1000;
-    this.db.prepare(`
-      INSERT INTO hebbian_links (source_id, target_id, strength, coactivation_count, created_at)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(source_id, target_id) DO UPDATE SET
-        strength = excluded.strength,
-        coactivation_count = excluded.coactivation_count
-    `).run(sourceId, targetId, strength, coactivationCount, now);
+    const existing = this.getHebbianLink(sourceId, targetId);
+    
+    if (existing) {
+      this.db.prepare(`
+        UPDATE hebbian_links
+        SET strength = ?, coactivation_count = ?
+        WHERE source_id = ? AND target_id = ?
+      `).run(strength, coactivationCount, sourceId, targetId);
+    } else {
+      this.db.prepare(`
+        INSERT INTO hebbian_links (source_id, target_id, strength, coactivation_count, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(sourceId, targetId, strength, coactivationCount, now);
+    }
   }
 
   getHebbianNeighbors(memoryId: string): string[] {
