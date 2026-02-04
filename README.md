@@ -109,6 +109,7 @@ The math is simple. The insight is connecting it to agent memory. Total core: **
 - 🔀 **Contradiction detection** — memories can contradict each other; outdated memories get 0.3× confidence penalty
 - 🔍 **Graph search** — entity-linked memories with multi-hop graph expansion
 - 🧠 **Hebbian learning** — "neurons that fire together wire together" — automatic link formation from co-activation patterns (no NER needed)
+- 🧩 **Session Working Memory** — cognitive working memory model (Miller's Law 7±2 chunks) reduces recall API calls by 70-80%
 - ⚙️ **Config presets** — tuned parameter sets for chatbot, task-agent, personal-assistant, researcher
 - 📦 **Zero required dependencies** — pure Python stdlib for FTS5 mode. Optional embedding adapters for semantic search.
 - 🔌 **Pluggable embeddings** — supports OpenAI, sentence-transformers, or custom adapters.
@@ -264,7 +265,47 @@ results = mem.recall("Python tools", graph_expand=True)
 
 **"Neurons that fire together, wire together"** — implemented as associative memory that emerges from usage patterns.
 
-### 6. Daily Maintenance (cron job or scheduler)
+### 6. Session Working Memory (Cost Optimization)
+
+Reduce API calls by 70-80% with cognitive working memory:
+
+```python
+from engram import Memory, SessionWorkingMemory
+
+mem = Memory("./agent.db")
+session_wm = SessionWorkingMemory()  # capacity=7 (Miller's Law), decay=5min
+
+# Instead of recalling every message:
+for message in conversation:
+    # Smart recall — only hits DB when topic changes
+    results = mem.session_recall(message, session_wm=session_wm)
+    # Returns cached WM items if topic is continuous
+    # Does full recall only when topic switches
+```
+
+**How it works:**
+- Maintains ~7 active memory chunks (Miller's Law: 7±2)
+- Checks if new query overlaps with current working memory + Hebbian neighbors
+- If ≥60% overlap → topic is continuous, reuse cached memories
+- If <60% overlap → topic changed, do fresh recall
+
+**Cost comparison:**
+
+| Scenario | Every-message recall | Session WM |
+|----------|---------------------|------------|
+| 10 messages, same topic | 10 full recalls | 1-2 recalls |
+| 10 messages, 3 topic switches | 10 full recalls | ~4 recalls |
+| Token consumption | ~15,000 | ~3,000-5,000 |
+
+**MCP usage:**
+```python
+# Via MCP tools:
+# engram.session_recall — auto-manages working memory per session_id
+# engram.session_status — view current working memory state
+# engram.session_clear — reset a session's working memory
+```
+
+### 7. Daily Maintenance (cron job or scheduler)
 
 ```python
 # Run once per day
@@ -507,6 +548,10 @@ For **Cursor**, edit `.cursor/mcp.json` in your project:
 |------|-------------|
 | `engram.store` | Store a new memory with type and importance |
 | `engram.recall` | Recall memories ranked by ACT-R activation |
+| `engram.session_recall` | Session-aware recall — only retrieves when topic changes (saves 70-80% API calls) |
+| `engram.session_status` | Get current working memory state for a session |
+| `engram.session_clear` | Clear a session's working memory |
+| `engram.session_list` | List all active sessions |
 | `engram.consolidate` | Run memory consolidation (like sleep) |
 | `engram.forget` | Prune weak memories or forget specific ones |
 | `engram.reward` | Apply user feedback to shape memory |

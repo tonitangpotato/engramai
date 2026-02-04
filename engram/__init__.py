@@ -22,6 +22,20 @@ from engram.memory import Memory
 from engram.config import MemoryConfig
 from engram.core import MemoryType, MemoryLayer, MemoryEntry, MemoryStore
 from engram.adaptive_tuning import AdaptiveTuner, AdaptiveMetrics
+from engram.session_wm import SessionWorkingMemory, get_session_wm, clear_session, list_sessions
 
-__all__ = ["Memory", "MemoryConfig", "MemoryType", "MemoryLayer", "MemoryEntry", "MemoryStore", "AdaptiveTuner", "AdaptiveMetrics"]
-__version__ = "0.2.0"  # Bumped for embedding support
+__all__ = [
+    "Memory",
+    "MemoryConfig",
+    "MemoryType",
+    "MemoryLayer",
+    "MemoryEntry",
+    "MemoryStore",
+    "AdaptiveTuner",
+    "AdaptiveMetrics",
+    "SessionWorkingMemory",
+    "get_session_wm",
+    "clear_session",
+    "list_sessions",
+]
+__version__ = "0.3.0"  # Bumped for Session Working Memory

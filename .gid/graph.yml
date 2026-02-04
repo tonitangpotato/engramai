@@ -100,6 +100,29 @@ nodes:
     description: >-
       Contradiction detection: memories can link as contradicts/contradicted_by, contradicted memories get 0.3x
       confidence penalty, update_memory() creates correction chains
+  feat-session-wm:
+    type: Feature
+    layer: application
+    status: draft
+    priority: core
+    description: >-
+      Session Working Memory - 会话级智能recall触发。基于认知科学working memory模型：
+      容量限制(Miller's Law 7±2), 时间衰减(Baddeley 300s), Hebbian邻域检测。
+      解决pre-hooks每条消息都recall成本过高的问题。
+  comp-session-wm-class:
+    type: Component
+    layer: application
+    status: draft
+    description: >-
+      SessionWorkingMemory class: 维护活跃记忆IDs, 容量限制pruning, 时间衰减pruning,
+      needs_recall()判断(检查Hebbian邻域重叠)
+  mcp-session-recall:
+    type: Interface
+    layer: interface
+    status: draft
+    description: >-
+      MCP tool session_recall: session-aware智能recall。自动判断是否需要完整检索，
+      话题连续时返回working memory context，话题切换时触发完整recall。
   test-core:
     type: Test
     layer: application
@@ -404,3 +427,18 @@ edges:
   - from: test-core
     to: core-cognitive
     relation: tested_by
+  - from: feat-session-wm
+    to: core-cognitive
+    relation: implements
+  - from: feat-session-wm
+    to: feat-hebbian
+    relation: depends_on
+  - from: comp-session-wm-class
+    to: feat-session-wm
+    relation: implements
+  - from: mcp-session-recall
+    to: feat-session-wm
+    relation: implements
+  - from: mcp-session-recall
+    to: integrations
+    relation: implements

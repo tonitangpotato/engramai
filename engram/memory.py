@@ -37,7 +37,10 @@ import os
 import time
 
 
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from engram.session_wm import SessionWorkingMemory
 
 from engram.config import MemoryConfig
 from engram.core import MemoryEntry, MemoryStore, MemoryType, MemoryLayer, DEFAULT_IMPORTANCE
@@ -291,6 +294,67 @@ class Memory:
                     pass
 
         return output
+
+    def session_recall(
+        self,
+        query: str,
+        session_wm: "SessionWorkingMemory" = None,
+        limit: int = 5,
+        context: list[str] = None,
+        types: list[str] = None,
+        min_confidence: float = 0.0,
+        graph_expand: bool = True,
+    ) -> list[dict]:
+        """
+        Session-aware recall — only execute full recall when topic changes.
+        
+        This is the intelligent recall entry point for conversational agents.
+        Instead of always doing expensive retrieval, it:
+        
+        1. Checks if the query topic overlaps with current working memory
+        2. If yes (continuous topic) → return cached working memory items
+        3. If no (topic switch) → do full recall and update working memory
+        
+        Based on cognitive science: we don't re-search our entire memory
+        for every utterance; we keep ~7 items active and only search
+        when the context changes.
+        
+        Args:
+            query: Natural language query
+            session_wm: SessionWorkingMemory instance. If None, falls back to regular recall.
+            limit: Maximum number of results (only used for full recall)
+            context: Additional context keywords
+            types: Filter by memory types
+            min_confidence: Minimum confidence threshold
+            graph_expand: Whether to expand via graph links
+            
+        Returns:
+            List of memory dicts. Same format as recall().
+            Results from working memory cache have "_from_wm": True.
+        """
+        # Import here to avoid circular import
+        from engram.session_wm import SessionWorkingMemory
+        
+        # No session WM provided → fall back to standard recall
+        if session_wm is None:
+            return self.recall(
+                query, limit=limit, context=context, types=types,
+                min_confidence=min_confidence, graph_expand=graph_expand,
+            )
+        
+        # Check if we need a full recall
+        if session_wm.needs_recall(query, self):
+            # Topic changed or WM empty → full recall
+            results = self.recall(
+                query, limit=limit, context=context, types=types,
+                min_confidence=min_confidence, graph_expand=graph_expand,
+            )
+            # Update working memory with new results
+            session_wm.activate([r["id"] for r in results])
+            return results
+        else:
+            # Topic continuous → return working memory items
+            return session_wm.get_active_memories(self)
 
     def consolidate(self, days: float = 1.0):
         """
