@@ -14,6 +14,17 @@ meta:
         - decided_by
     discovered: []
 nodes:
+  phase-0:
+    type: Feature
+    layer: application
+    status: active
+    description: 'Phase 0: Project restructure — convert prototype into proper Python package'
+    priority: supporting
+  task-package-structure:
+    type: Component
+    layer: application
+    status: active
+    description: engram/ package with __init__.py, pyproject.toml, proper imports
   task-sqlite-store:
     type: Component
     layer: infrastructure
@@ -24,6 +35,17 @@ nodes:
     layer: infrastructure
     status: active
     description: FTS5 virtual table with triggers for auto-sync on INSERT/UPDATE/DELETE
+  task-migrate-tests:
+    type: Test
+    layer: application
+    status: active
+    description: 9 original tests migrated to engram package imports, all passing
+  phase-1:
+    type: Feature
+    layer: application
+    status: active
+    description: 'Phase 1: engram-core library — pip-installable with clean API'
+    priority: core
   feat-activation:
     type: Component
     layer: application
@@ -107,6 +129,12 @@ nodes:
     description: >-
       68 tests across 10 categories: store, activation, consolidation, forgetting, confidence, reward, downscaling,
       anomaly, contradiction, integration
+  phase-2:
+    type: Feature
+    layer: application
+    status: active
+    description: 'Phase 2: MCP server — 7 tools via FastMCP, JSON-RPC over stdio'
+    priority: supporting
   feat-mcp-server:
     type: Component
     layer: interface
@@ -114,6 +142,12 @@ nodes:
     description: >-
       MCP server: engram.store, engram.recall, engram.consolidate, engram.forget, engram.reward, engram.stats,
       engram.export
+  phase-3:
+    type: Feature
+    layer: application
+    status: active
+    description: 'Phase 3: Clawdbot skill with CLI, SKILL.md, and migration tool'
+    priority: supporting
   feat-clawdbot-skill:
     type: Component
     layer: application
@@ -137,6 +171,39 @@ nodes:
     layer: application
     status: draft
     description: 'Pre-tuned parameter sets for agent archetypes: chatbot, task-agent, personal-assistant, researcher'
+  feat-adaptive-tuning:
+    type: Component
+    layer: application
+    status: draft
+    description: Self-adjusting parameters based on recall hit rate, reward feedback, miss rate. Paper contribution point.
+  phase-4:
+    type: Feature
+    layer: application
+    status: draft
+    description: 'Phase 4: arXiv paper + open source launch + Show HN'
+    priority: generic
+  task-paper:
+    type: Component
+    layer: interface
+    status: draft
+    description: >-
+      arXiv paper: 'Engram: Computational Neuroscience Models for Agent Memory' — math foundations, two-dim confidence,
+      benchmarks
+  task-pypi:
+    type: Component
+    layer: application
+    status: draft
+    description: Publish to PyPI — pip install engram
+  task-github:
+    type: Component
+    layer: interface
+    status: active
+    description: README.md, LICENSE (Apache 2.0), .gitignore, pyproject.toml, examples/ — ready for GitHub
+  task-launch:
+    type: Component
+    layer: interface
+    status: draft
+    description: Show HN + Product Hunt + dev blog post
   decision-positioning:
     type: Decision
     layer: domain
@@ -192,6 +259,34 @@ nodes:
     description: >-
       engram is designed for LLM agents, not standalone. Philosophy: 'LLM is the semantic layer, engram is the dynamics
       layer'. Don't duplicate what LLM already does well.
+  advanced-testing:
+    type: Feature
+    layer: application
+    status: in_progress
+    description: 'Comprehensive testing: long-term sim, psychology experiments, real conversations, stress testing'
+    priority: supporting
+  test-long-term:
+    type: Component
+    layer: application
+    status: draft
+    description: '1-year (365 days) simulation: memory plateau, important memory persistence, latency trends'
+  test-psychology:
+    type: Component
+    layer: application
+    status: draft
+    description: >-
+      Psychology experiment replication: serial position, spacing effect, testing effect, forgetting curve, emotional
+      enhancement
+  test-real-conversations:
+    type: Component
+    layer: application
+    status: draft
+    description: 'Real conversation patterns: multi-session recall, preference learning, context switching'
+  test-stress:
+    type: Component
+    layer: application
+    status: draft
+    description: 'Stress testing: 100k memories, continuous writes, burst handling, large DB files'
   core-cognitive:
     type: Feature
     description: >-
@@ -225,9 +320,66 @@ nodes:
     status: active
     priority: supporting
 edges:
+  - from: task-package-structure
+    to: phase-0
+    relation: implements
+  - from: task-sqlite-store
+    to: phase-0
+    relation: implements
+  - from: task-fts5-index
+    to: phase-0
+    relation: implements
+  - from: task-migrate-tests
+    to: phase-0
+    relation: implements
   - from: task-fts5-index
     to: task-sqlite-store
     relation: depends_on
+  - from: task-migrate-tests
+    to: task-sqlite-store
+    relation: depends_on
+  - from: phase-1
+    to: phase-0
+    relation: depends_on
+  - from: feat-activation
+    to: phase-1
+    relation: implements
+  - from: feat-consolidation
+    to: phase-1
+    relation: implements
+  - from: feat-forgetting
+    to: phase-1
+    relation: implements
+  - from: feat-search
+    to: phase-1
+    relation: implements
+  - from: feat-confidence
+    to: phase-1
+    relation: implements
+  - from: feat-reward
+    to: phase-1
+    relation: implements
+  - from: feat-downscaling
+    to: phase-1
+    relation: implements
+  - from: feat-anomaly
+    to: phase-1
+    relation: implements
+  - from: feat-graph-index
+    to: phase-1
+    relation: implements
+  - from: feat-api
+    to: phase-1
+    relation: implements
+  - from: feat-portability
+    to: phase-1
+    relation: implements
+  - from: test-core
+    to: phase-1
+    relation: implements
+  - from: feat-contradiction
+    to: phase-1
+    relation: implements
   - from: feat-contradiction
     to: feat-confidence
     relation: depends_on
@@ -277,6 +429,9 @@ edges:
     to: decision-positioning
     relation: decided_by
   - from: feat-hebbian
+    to: phase-1
+    relation: implements
+  - from: feat-hebbian
     to: feat-search
     relation: enables
   - from: feat-hebbian
@@ -285,9 +440,24 @@ edges:
   - from: decision-no-ner
     to: decision-llm-native
     relation: decided_by
+  - from: phase-2
+    to: phase-1
+    relation: depends_on
+  - from: feat-mcp-server
+    to: phase-2
+    relation: implements
   - from: feat-mcp-server
     to: feat-api
     relation: depends_on
+  - from: phase-3
+    to: phase-1
+    relation: depends_on
+  - from: feat-clawdbot-skill
+    to: phase-3
+    relation: implements
+  - from: feat-migration
+    to: phase-3
+    relation: implements
   - from: feat-clawdbot-skill
     to: feat-api
     relation: depends_on
@@ -297,7 +467,34 @@ edges:
   - from: feat-presets
     to: feat-config
     relation: implements
+  - from: feat-adaptive-tuning
+    to: feat-config
+    relation: implements
   - from: feat-config
+    to: feat-api
+    relation: depends_on
+  - from: phase-4
+    to: phase-2
+    relation: depends_on
+  - from: phase-4
+    to: phase-3
+    relation: depends_on
+  - from: task-paper
+    to: phase-4
+    relation: implements
+  - from: task-pypi
+    to: phase-4
+    relation: implements
+  - from: task-github
+    to: phase-4
+    relation: implements
+  - from: task-launch
+    to: phase-4
+    relation: implements
+  - from: task-paper
+    to: test-core
+    relation: depends_on
+  - from: task-pypi
     to: feat-api
     relation: depends_on
   - from: feat-api
@@ -306,6 +503,24 @@ edges:
   - from: feat-api
     to: decision-open-core
     relation: decided_by
+  - from: test-long-term
+    to: advanced-testing
+    relation: implements
+  - from: test-psychology
+    to: advanced-testing
+    relation: implements
+  - from: test-real-conversations
+    to: advanced-testing
+    relation: implements
+  - from: test-stress
+    to: advanced-testing
+    relation: implements
+  - from: advanced-testing
+    to: phase-1
+    relation: depends_on
+  - from: task-paper
+    to: test-psychology
+    relation: depends_on
   - from: memory-api
     to: retrieval-engine
     relation: depends_on

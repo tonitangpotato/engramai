@@ -15,7 +15,7 @@ npm install neuromemory-ai
 ## Quick Start
 
 ```typescript
-import { Memory } from 'engram';
+import { Memory } from 'neuromemory-ai';
 
 const memory = new Memory({ dbPath: 'agent-memory.db' });
 
